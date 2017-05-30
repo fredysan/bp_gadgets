@@ -1,0 +1,517 @@
+<?php
+
+/**
+ * Implements hook_block_info().
+ */
+function bp_gadgets_block_info() {
+  $blocks['bp_user_login'] = array('info' => t('BP: User login block'));
+  return $blocks;
+}
+
+/**
+ * Implements hook_menu().
+ */
+function bp_gadgets_menu() {
+  $items = array();
+
+  $items['user/favorites/get-link/%'] = array(
+    'access callback' => 'user_is_logged_in',
+    'page callback' => 'bp_gadgets_ajax_get_favorites_link',
+    'page arguments' => array(3),
+    'file' => 'bp_gadgets.ajax.inc',
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['user/unsubscribe/%'] = array(
+    'description' => 'Page to call the function unsubscribe email',
+    'file' => 'bp_gadgets_user_unsubscribe.inc',
+    'page callback' => 'bp_gadgets_user_unsubscribe',
+    'page arguments' => array(2),
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['faq'] = array(
+    'description' => 'Frequenly Asked Questions',
+    'file' => 'bp_gadgets_faq.inc',
+    'page callback' => 'bp_gadgets_faq',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['driver-rewards/unsubscribe'] = array(
+    'description' => 'Page to call the function unsubscribe email from epsilon',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('bp_gadgets_user_unsubscribe_epsilon_form'),
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['driver-rewards/unsubscribe/steps'] = array(
+    'description' => 'Page to call the function unsubscribe email from epsilon',
+    'page callback' => 'bp_gadgets_user_unsubscribe_epsilon_error',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['driver-rewards/unsubscribe/confirmation'] = array(
+    'description' => 'Page to call the function unsubscribe email from epsilon',
+    'page callback' => 'bp_gadgets_user_unsubscribe_epsilon_success',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_forms().
+ */
+function bp_gadgets_forms($form_id, $args) {
+
+  $forms['bp_gadgets_user_unsubscribe_form'] = array(
+    'callback' => 'bp_gadgets_user_unsubscribe_form',
+  );
+
+  $forms['bp_gadgets_user_unsubscribe_epsilon_form'] = array(
+    'callback' => 'bp_gadgets_user_unsubscribe_epsilon_form',
+  );
+
+  return $forms;
+}
+
+/**
+ * Implements hook_form_alter
+ */
+function bp_gadgets_form_alter(&$form, $form_state, $form_id) {
+  switch ($form_id) {
+    case 'bp_gadgets_user_unsubscribe_form':
+      if ($form_state['submitted']) {
+        unset($form['html']);
+        unset($form['confirmation']);
+        unset($form['actions']['submit']);
+      }
+      break;
+  }
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function bp_gadgets_block_view($delta = '') {
+  $block = array();
+
+  switch ($delta) {
+    case 'bp_user_login':
+      $block['content'] = bp_gadgets_user_block_content();
+      break;
+  }
+
+  return $block;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function bp_gadgets_theme($existing, $type, $theme, $path) {
+
+  $theme_path = drupal_get_path('theme', 'bp_theme');
+  return array(
+    'block_bp_user_login' => array(
+      'template' => $theme_path . '/templates/custom/bp_gadgets/block-bp-user-login',
+      'variables' => array(),
+    ),
+    'block_bp_invigorate_hero' => array(
+      'template' => $theme_path . '/templates/custom/bp_gadgets/block-bp-invigorate-hero',
+      'variables' => array(),
+    ),
+    'block_bp_invigorate_dirt' => array(
+      'template' => $theme_path . '/templates/custom/bp_gadgets/block-bp-invigorate-dirt',
+      'variables' => array(),
+    ),
+    'block_bp_invigorate_fireworks' => array(
+      'template' => $theme_path . '/templates/custom/bp_gadgets/block-bp-invigorate-fireworks',
+      'variables' => array(),
+    ),
+    'block_bp_invigorate_tips' => array(
+      'template' => $theme_path . '/templates/custom/bp_gadgets/block-bp-invigorate-tips',
+      'variables' => array(),
+    ),
+    'block_bp_invigorate_promise' => array(
+      'template' => $theme_path . '/templates/custom/bp_gadgets/block-bp-invigorate-promise',
+      'variables' => array(),
+    ),
+    'block_bp_invigorate_rewards' => array(
+      'template' => $theme_path . '/templates/custom/bp_gadgets/block-bp-invigorate-rewards',
+      'variables' => array(),
+    ),
+    'block_bp_invigorate_footer' => array(
+      'template' => $theme_path . '/templates/custom/bp_gadgets/block-bp-invigorate-footer',
+      'variables' => array(),
+    ),
+    'block_bp_diesel_header' => array(
+      'template' => $theme_path . '/templates/custom/bp_gadgets/block-bp-diesel-header',
+      'variables' => array(),
+    ),
+    'block_bp_diesel_details' => array(
+      'template' => $theme_path . '/templates/custom/bp_gadgets/block-bp-diesel-details',
+      'variables' => array(),
+    ),
+    'block_bp_disclaimer' => array(
+      'template' => $theme_path . '/templates/custom/bp_gadgets/block-bp-disclaimer',
+      'variables' => array(),
+    ),
+    'block_bp_driver_rewards_faq' => array(
+      'template' => $theme_path . '/templates/custom/bp_gadgets/block-bp-driver-rewards-faq',
+      'variables' => array(),
+    ),
+    'block_bp_carousel' => array(
+      'template' => $theme_path . '/templates/custom/bp_gadgets/block-bp-carousel',
+      'variables' => array(),
+    ),
+    'block_bp_card_img_left' => array(
+      'template' => $theme_path . '/templates/custom/bp_gadgets/block-bp-card-img-left',
+      'variables' => array(),
+    ),
+    'block_bp_card_img_right' => array(
+      'template' => $theme_path . '/templates/custom/bp_gadgets/block-bp-card-img-right',
+      'variables' => array(),
+    ),
+    'block_bp_card_login' => array(
+      'template' => $theme_path . '/templates/custom/bp_gadgets/block-bp-card-login',
+      'variables' => array(),
+    ),
+    'block_bp_station_finder' => array(
+      'template' => $theme_path . '/templates/custom/bp_gadgets/block-bp-station-finder',
+      'variables' => array(),
+    ),
+    'block_bp_featured_articles' => array(
+      'template' => $theme_path . '/templates/custom/bp_gadgets/block-bp-featured-articles',
+      'variables' => array(),
+    ),
+    'block_bp_card_hero' => array(
+      'template' => $theme_path . '/templates/custom/bp_gadgets/block-bp-card-hero',
+      'variables' => array(),
+    ),
+    'block_bp_card_hero_login' => array(
+      'template' => $theme_path . '/templates/custom/bp_gadgets/block-bp-card-hero-login',
+      'variables' => array(),
+    ),
+    'block_bp_welcome_back' => array(
+      'template' => $theme_path . '/templates/custom/bp_gadgets/block-bp-welcome-back',
+      'variables' => array(),
+    ),
+    'block_bp_rewards_balance' => array(
+      'template' => $theme_path . '/templates/custom/bp_gadgets/block_bp_rewards_balance',
+      'variables' => array(),
+    ),
+    'block_bp_last_visit' => array(
+      'template' => $theme_path . '/templates/custom/bp_gadgets/block_bp_last_visit',
+      'variables' => array(),
+    ),
+    'block_bp_rewards_history' => array(
+      'template' => $theme_path . '/templates/custom/bp_gadgets/block_bp_rewards_history',
+      'variables' => array(),
+    ),
+    'block_bp_welcome_user' => array(
+      'template' => $theme_path . '/templates/custom/bp_gadgets/block_bp_welcome_user',
+      'variables' => array(),
+    ),
+    'block_bp_user_menu' => array(
+      'template' => $theme_path . '/templates/custom/bp_gadgets/block_bp_user_menu',
+      'variables' => array(),
+    ),
+    'block_bp_claim_discount' => array(
+      'variables' => array(),
+    ),
+    'block_bp_account_earning_preferences' => array(
+      'template' => $theme_path . '/templates/custom/bp_gadgets/block_bp_account_earning_preferences',
+      'variables' => array(),
+    ),
+    'bp_gadgets_user_unsubscribe' => array(
+      'template' => $theme_path . '/templates/custom/bp_gadgets/bp_gadgets_user_unsubscribe',
+      'variables' => array(),
+    ),
+    'bp_gadgets_user_unsubscribe_show_message' => array(
+      'template' => $theme_path . '/templates/custom/bp_gadgets/bp-gadgets-user-unsubscribe-show-message',
+      'variables' => array(),
+    ),
+    'block_bp_manage_cc' => array(
+      'variables' => array(),
+    ),
+    'block_bp_update_phonenumber' => array(
+      'variables' => array(),
+    ),
+    'block_bp_request_cc' => array(
+      'variables' => array(),
+    ),
+    'modal_delete_cc' => array(
+      'variables' => array(),
+    ),
+    'modal_add_cc' => array(
+      'variables' => array(),
+    ),
+    'page_faq' => array(
+      'variables' => array(),
+    ),
+    'page_faq_item' => array(
+      'variables' => array(),
+    ),
+  );
+}
+
+/**
+ *
+ */
+function bp_gadgets_user_block_content() {
+  global $user;
+  $tpl_vars = array();
+
+  if (user_is_logged_in()) {
+    $cents = bp_gadgets_get_rewards_balance();
+    $rewards_balance = bp_gadgets_format_cents($cents);
+    $user_wrapper = entity_metadata_wrapper('user', $user);
+    $user_name = trim($user_wrapper->field_user_first_name->value() . ' ' . $user_wrapper->field_user_last_name->value());
+
+    if (empty($user_name)) {
+      $user_name = $user->name;
+    }
+
+    $tpl_vars['user_name'] = $user_name;
+    $tpl_vars['rewards_balance'] = $rewards_balance;
+  }
+
+  $tpl_vars['user_menu'] = menu_navigation_links('user-menu');
+
+  return theme('block_bp_user_login', $tpl_vars);
+}
+
+/**
+ * Return driver rewards balance
+ *
+ * @return int
+ */
+function bp_gadgets_get_rewards_balance() {
+  module_load_include('inc', 'bp_fis', 'bp_fis.api');
+
+  $rb = _bp_fis_api_get_rewards_balance();
+  return $rb;
+}
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function bp_gadgets_ctools_plugin_directory($owner, $plugin_type) {
+  if ($owner == 'ctools' && $plugin_type == 'content_types') {
+    return 'plugins/content_types';
+  }
+}
+
+/**
+ * Implements HOOK_preprocess_views_view.
+ */
+function bp_gadgets_preprocess_views_view(&$vars) {
+  $view = $vars['view'];
+  if ($view->name == 'nodes') {
+    if ($view->current_display == 'panel_pane_1') {
+      $tid = $view->args[0];
+      $term = taxonomy_term_load($tid);
+      $vars['term_name'] = $term->name;
+      $count = db_query("SELECT COUNT(*) as count, tid FROM {taxonomy_index} WHERE tid = {$tid} GROUP BY tid ORDER BY count DESC LIMIT 1")->fetchAll();
+      $vars['nodes_per_term'] = $count[0]->count;
+    }
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter.
+ *
+ * @param type $form
+ * @param type $form_state
+ * @param type $form_id
+ */
+function bp_gadgets_form_fivestar_custom_widget_alter(&$form, &$form_state, $form_id) {
+  $form['#prefix'] = '<div id="fivestar-custom-form-widget">';
+  $form['#suffix'] = '</div>';
+
+  $form['fivestar_submit']['#ajax'] = array(
+    'callback' => '_bp_gadgets_ctype_last_visit_fivestar_form_callback',
+    'wrapper' => 'fivestar-custom-form-widget',
+  );
+
+  // We add other buttons here because of the IE11 issue.
+  $form['fivestar_submit']['#prefix'] = '<div class="modal-footer"><div class="buttons">';
+  $form['fivestar_submit']['#suffix'] = '<button type="button" class="btn btn opacity transparent_to_green btn-cancel" data-dismiss="modal">Cancel</button></div></div>';
+
+  $form['fivestar_submit']['#attributes'] = array(
+    'data-dismiss' => array(
+      'modal',
+    ),
+    'class' => array(
+      'btn',
+      'opacity',
+      'yellow_to_green',
+    ),
+    'form' => 'fivestar-custom-widget',
+  );
+
+  $form['#submit'] = array('bp_gadgets_fivestar_form_submit');
+}
+
+/**
+ * Overrides the fivestar form submit removing the messages
+ *
+ * @param type $form
+ * @param type $form_state
+ */
+function bp_gadgets_fivestar_form_submit($form, $form_state) {
+  // Cast the vote.
+  _fivestar_cast_vote($form_state['settings']['content_type'], $form_state['settings']['content_id'], $form_state['values']['vote'], $form_state['settings']['tag']);
+}
+
+/**
+ * Callback function for the custom fivestar submit
+ * @return string
+ */
+function _bp_gadgets_ctype_last_visit_fivestar_form_callback($form, &$form_state) {
+  
+  $form = drupal_render($form);
+  $commands[] = ajax_command_insert(NULL, $form);
+  $commands[] = ajax_command_data('#rate-station-modal', 'fivestar', 'rated');
+  $commands[] = ajax_command_invoke('.rate-station-modal', 'trigger', array('submitedRate'));
+  $commands[] = ajax_command_invoke('#rate-station-modal', 'modal', array('hide'));
+
+  return array(
+    '#type' => 'ajax',
+    '#commands' => $commands,
+  );
+}
+
+function bp_gadgets_user_unsubscribe_epsilon_form($form, &$form_state) {
+
+  $form['#prefix'] = '<section class="content row generic_content_template unsubscribe">
+  <div class="col-xs-12 col-md-8 col-md-offset-2 col-lg-6 col-lg-offset-3">';
+
+  $form['html'] = array(
+    '#type' => 'markup',
+    '#markup' => t('<h1 class="title">Unsubscribe</h1>'),
+  );
+
+  $form['confirmation'] = array(
+    '#prefix' => '<p class="text padding_text">',
+    '#markup' => t('Are you sure you want to unsubscribe from the BP Rewards email? If so, click the submit button.'),
+    '#suffix' => '</p>',
+  );
+
+  $form['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Submit'),
+    '#attributes' => array('class' => array('btn opacity yellow_to_green')),
+  );
+
+  $form['#suffix'] = '  </div>
+</section>';
+
+  $form['#submit'] = array('bp_gadgets_user_unsubscribe_epsilon_form_submit');
+
+  return $form;
+}
+
+/**
+ * Formats the content of an standard drupal message
+ *
+ * @param string $message HTML or plain text
+ * @param string $type info, error, alert, promo, confirmation
+ * @param string $description HTML or plain text
+ * @param string $html HTML or plain text, it's being used to display a call to action link
+ *
+ * Example:
+ *   $message = 'Open. Swipe. Get $20';
+ *   $description = 'Paid as a statement credit after your first BP purchase within 60 days of opening a BP credit card account. Valid 10/5/16–1/31/17.';
+ *   $link = l('Apply now', 'https://www.onlinecreditcenter2.com/eapplygen2/load.do?cHash=151720150&subActionId=1000&langId=en', array('attributes' => array('class' => 'link-card')));
+ *   bp_gadgets_set_message($message, 'promo', $description, $link);
+ */
+function bp_gadgets_set_message($message) {
+  $args = func_get_args();
+  list($message, $type, $description, $link) = $args;
+  switch ($type) {
+    case 'promo':
+      $output = '<div class="col-xs-12 col-sm-9 col-md-10 newCard-col">';
+      $output .= '<a href="#" class="close-link"><span class="screen-reader-text">Close promotion banner</span></a>';
+      $output .= '<span class="promo-banner-title">' . $message . '</span>';
+      $output .= !empty($description) ? '<span class="promo-banner-desc">' . $description . '</span>' : '';
+      $output .= '</div>';
+      $output .= !empty($link) ? '<div class="col-xs-12 col-sm-3 col-md-2 newCardLink-col newCard-col">' . $link . '</div>' : '';
+      drupal_set_message($output, 'promo');
+      break;
+
+    default:
+      if (!empty($type)) {
+        drupal_set_message($message, $type);
+      }
+      else {
+        drupal_set_message($message);
+      }
+      break;
+  }
+}
+
+/**
+ *
+ * @global type $language
+ * @param type $vars
+ */
+function bp_gadgets_preprocess_page(&$vars) {
+  global $language;
+
+  $title = drupal_get_title();
+  $loggedInStatus = user_is_logged_in();
+  $locale = $language->language;
+
+  drupal_add_js(array(
+    'title' => $title,
+    'loggedInStatus' => $loggedInStatus,
+    'locale' => $locale,
+  ), array('type' => 'setting'));
+}
+
+/**
+ * Currency formatter for cents
+ *
+ * @param type $cents
+ * @return string Formatted value in cents or dollars
+ */
+function bp_gadgets_format_cents($cents, $as_dollars = FALSE) {
+  $resp = '';
+  $dollars = $cents / 100;
+
+  if ($dollars < 1) {
+    if ($as_dollars) {
+      $number = floor($cents);
+      $resp = '$' . number_format($number / 100, 2);
+    }
+    else {
+      $number = floor($cents);
+      $resp = $number . '¢';
+    }
+  }
+  else {
+    $number = floor($dollars * 100) / 100;
+    $resp = '$' . number_format($number, 2, '.', ',');
+  }
+
+  return $resp;
+}
+
+/**
+ * Currency formatter for dollars
+ *
+ * @param type $dollars
+ * @return string
+ */
+function bp_gadgets_format_dollars($dollars) {
+  $number = floor($dollars * 100) / 100;
+  $resp = '$' . number_format($number, 2, '.', ',');
+
+  return $resp;
+}
